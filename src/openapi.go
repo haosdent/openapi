@@ -21,67 +21,23 @@ import (
 
 const manual = `
 {
-	"desc": "Usage: openapi [production] [action] [property=value]\nAllow production:",
-	"child": {
-		"ecs": {
-			"desc": "Usage: openapi ecs [action] [property=value]\nAllow action:",
-			"child": {
-				"DescribeInstanceAttribute": {
-					"desc": "Usage: openapi ecs DescribeInstanceAttribute [property=value]\nAllow property:",
-					"child": {
-						"InstanceId": {
-							"desc": ""
-						},
-						"RegionId": {
-							"desc": ""
-						}
-					}
-				}
-			}
+	"ecs": {
+		"StartInstance": ["ImageId", "RegionId"],
+		"StopInstance": ["ImageId", "RegionId"]
 		},
-		"slb": {
-			"desc": "",
-			"child": {
-				"DescribeInstanceAttribute": {
-					"desc": "",
-					"child": {
-						"InstanceId": {
-							"desc": "Usage: openapi [production] [action] [property=value]\nAllow production:"
-						},
-						"RegionId": {
-							"desc": "Usage: openapi [production] [action] [property=value]\nAllow production:"
-						}
-					}
-				}
-			}
-		},
-		"rds": {
-			"desc": "",
-			"child": {
-				"DescribeInstanceAttribute": {
-					"desc": "",
-					"child": {
-						"InstanceId": {
-							"desc": "Usage: openapi [production] [action] [property=value]\nAllow production:"
-						},
-						"RegionId": {
-							"desc": "Usage: openapi [production] [action] [property=value]\nAllow production:"
-						}
-					}
-				}
-			}
-		}
-	}
+	"rds": {},
+	"slb": {}
 }
 `
 
 const keyFile = ".aliyuncredentials"
+
 var accessKey string
 var accessId string
 
 type Config struct {
 	Credentials struct {
-		Accesskeyid string
+		Accesskeyid     string
 		Accesskeysecret string
 	}
 }
@@ -105,7 +61,6 @@ func request(url string) {
 
 func ComputeSign(p *map[string]string) string {
 	msg := "GET&%2F&" + url.QueryEscape(GenerateQuery(p))
-	//fmt.Println(msg)
 	accessKey := accessKey + "&"
 	h := hmac.New(sha1.New, []byte(accessKey))
 	h.Write([]byte(msg))
@@ -140,23 +95,36 @@ func GenerateQuery(p *map[string]string) string {
 
 func InitAccessIdKey() {
 	usr, err := user.Current()
+	conf := usr.HomeDir + "/" + keyFile
+	if _, err := os.Stat(conf); os.IsNotExist(err) {
+		fmt.Println("Config your accessId and accessKey through 'openapi config --id=accessId --secret=accessKey' firstly.")
+		os.Exit(-1)
+	}
+
 	var cfg Config
-	err = gcfg.ReadFileInto(&cfg, usr.HomeDir + "/" + keyFile)
+	err = gcfg.ReadFileInto(&cfg, conf)
 	if err == nil {
-		//fmt.Println(.Get("Credentials", "accesskeyid"))
-		//fmt.Println(cfg.Credentials.Accesskeyid)
-		//fmt.Println(cfg.Credentials.Accesskeysecret)
 		accessId = cfg.Credentials.Accesskeyid
 		accessKey = cfg.Credentials.Accesskeysecret
-		fmt.Println(accessId)
-		fmt.Println(accessKey)
-		os.Exit(-1)
 	} else {
 		fmt.Println(err)
 		os.Exit(-1)
 	}
 }
 
+func SaveAccessIdKey(accessId string, accessKey string) {
+	usr, err := user.Current()
+	conf := usr.HomeDir + "/" + keyFile
+	dat := []byte(fmt.Sprintf("[Credentials]\naccesskeyid = %s\naccesskeysecret = %s\n", accessId, accessKey))
+	err = ioutil.WriteFile(conf, dat, 0644)
+	if err == nil {
+		fmt.Println("Save accessId and accessKey successfully!")
+		os.Exit(0)
+	} else {
+		fmt.Println(err)
+		os.Exit(-1)
+	}
+}
 
 func UpdateParams(p *map[string]string) {
 	const layout = "2006-01-02T15:04:05Z"
@@ -166,38 +134,59 @@ func UpdateParams(p *map[string]string) {
 	(*p)["SignatureMethod"] = "HMAC-SHA1"
 	(*p)["AccessKeyId"] = accessId
 
-	t := time.Now()
+	t := time.Now().UTC()
 	(*p)["SignatureNonce"] = uuid.NewUUID().String()
 	(*p)["TimeStamp"] = t.Format(layout)
-	(*p)["TimeStamp"] = "2014-07-09T15:25:06Z"
 	(*p)["Signature"] = ComputeSign(p)
 }
 
 func help(args []string) {
-	//fmt.Println(args)
-	data := map[string]interface{}{}
+	var data interface{}
 	decoder := json.NewDecoder(strings.NewReader(manual))
 	decoder.Decode(&data)
 
+	counter := 0
 	for _, arg := range args {
-		tmp := data["child"].(map[string]interface{})[arg]
-		if tmp != nil {
-			data = tmp.(map[string]interface{})
-		} else {
+		if (counter >= 2) {
 			break
+		}
+
+		tmp := data.(map[string]interface{})[arg]
+		if tmp != nil {
+			counter++
+			data = tmp
+		} else {
+			break;
 		}
 	}
 
-	fmt.Println(data["desc"])
-	for i, _ := range data["child"].(map[string]interface{}) {
+	head := "Usage: openapi %s %s [property=value]\nAllow %s:"
+	switch counter {
+	case 0:
+		head = fmt.Sprintf(head, "[production]", "[action]", "production")
+	case 1:
+		head = fmt.Sprintf(head, args[0], "[action]", "action")
+	case 2:
+		head = fmt.Sprintf(head, args[0], args[1], "property")
+	}
+	fmt.Println(head)
+
+	switch e := data.(type) {
+	case map[string]interface{}:
+	for i, _ := range e {
 		fmt.Print("\t")
 		fmt.Println(i)
 	}
+	case []interface{}:
+	for _, i := range e {
+		fmt.Print("\t")
+		fmt.Println(i)
+	}
+	}
+	os.Exit(0)
 }
 
 func main() {
-	fmt.Println(os.Args)
-	InitAccessIdKey()
 
 	if len(os.Args) <= 1 {
 		help(os.Args[1:1])
@@ -216,6 +205,14 @@ func main() {
 		case "rds":
 			endpoint = "rds.aliyuncs.com"
 			version = "2013-05-28"
+		case "config":
+			l := len(os.Args)
+			m := make(map[string]string)
+			for i := 2; i < l; i++ {
+				arr := strings.SplitN(os.Args[i], "=", 2)
+				m[arr[0]] = arr[1]
+			}
+			SaveAccessIdKey(m["--id"], m["--secret"])
 		case "help":
 			help(os.Args[2:])
 			return
@@ -229,6 +226,7 @@ func main() {
 			return
 		}
 
+		InitAccessIdKey()
 		action := os.Args[2]
 		params := map[string]string{
 			"Version": version,
