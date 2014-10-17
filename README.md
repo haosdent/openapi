@@ -37,16 +37,19 @@ Allow production:
         ecs
         rds
         slb
+        ess
 $ ./openapi ecs DescribeRegion
 Config your accessId and accessKey through 'openapi config --id=accessId --secret=accessKey' firstly.
 ```
 
 ### 使用：
 
-#### 配置AccessId和AccessKey：
+#### AccessId和AccessKey：
+
+AccessId和AccessKey是通用参数，所以每次执行都需要带上
 
 ```
-$ ./openapi config --id=accessId --secret=accessKey
+$ ./openapi ecs AccessId=xxxx AccessKey=xxxxxx
 ```
 
 #### 帮助
