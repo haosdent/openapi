@@ -97,6 +97,29 @@ const manual = `
         "AddBackendServers": ["RegionId", "LoadBalancerId", "BackendServers"],
         "RemoveBackendServers": ["RegionId", "LoadBalancerId", "BackendServers"],
         "DescribeHealthStatus": ["RegionId", "LoadBalancerId", "ListenerPort"]
+    },
+    "ess": {
+        "CreateScalingGroup": ["RegionId", "MaxSize", "MinSize", "ScalingGroupName", "DefaultCooldown", "RemovalPolicy.N", "LoadBalancerId", "DBInstanceId.N"],
+        "ModifyScalingGroup": ["ScalingGroupId", "ScalingGroupName", "ActiveScalingConfigurationId", "MinSize", "MaxSize", "DefaultCooldown", "RemovalPolicy.N"],
+        "DescribeScalingGroups": ["RegionId", "ScalingGroupId.N", "ScalingGroupName.N", "PageNumber", "PageSize"],
+        "EnableScalingGroup": ["ScalingGroupId", "ActiveScalingConfigurationId", "InstanceId.N"],
+        "DisableScalingGroup": ["ScalingGroupId"],
+        "DeleteScalingGroup": ["ScalingGroupId", "ForceDelete"],
+        "DescribeScalingInstances": ["RegionId", "ScalingGroupId", "ScalingConfigurationId", "InstanceId.N", "HealthStatus", "LifecycleState", "CreationType", "PageNumber", "PageSize"],
+        "CreateScalingConfiguration": ["ScalingGroupId", "ImageId", "InstanceType", "SecurityGroupId", "ScalingConfigurationName", "InternetChargeType", "InternetMaxBandwidthIn", "InternetMaxBandwidthOut", "SystemDisk.Category"],
+        "DescribeScalingConfigurations": ["RegionId", "ScalingGroupId", "ScalingConfigurationId.N", "ScalingConfigurationName.N", "PageNumber", "PageSize"],
+        "DeleteScalingConfiguration": ["ScalingConfigurationId"],
+        "CreateScalingRule": ["ScalingGroupId", "AdjustmentType", "AdjustmentValue", "ScalingRuleName", "Cooldown"],
+        "ModifyScalingRule": ["ScalingRuleId", "AdjustmentType", "AdjustmentValue", "ScalingRuleName", "Cooldown"],
+        "DescribeScalingRules": ["RegionId", "ScalingGroupId", "ScalingRuleId.N", "ScalingRuleName.N", "ScalingRuleAri.N", "PageNumber", "PageSize"],
+        "DeleteScalingRule": ["ScalingRuleId"],
+        "ExecuteScalingRule": ["ScalingRuleAri", "ClientToken"],
+        "AttachInstances": ["ScalingGroupId", "InstanceId.N"],
+        "RemoveInstances": ["ScalingGroupId", "InstanceId.N"],
+        "CreateScheduledTask": ["RegionId", "ScheduledAction", "LaunchTime", "ScheduledTaskName", "Description", "LaunchExpirationTime", "RecurrenceType", "RecurrenceValue", "RecurrenceEndTime", "TaskEnabled"],
+        "ModifyScheduledTask": ["ScheduledTaskId", "ScheduledTaskName", "Description", "ScheduledAction", "LaunchTime", "LaunchExpirationTime", "RecurrenceType", "RecurrenceValue", "RecurrenceEndTime", "TaskEnabled"],
+        "DescribeScheduledTasks": ["RegionId", "ScheduledTaskId.N", "ScheduledTaskName.N", "ScheduledAction.N", "PageNumber", "PageSize"],
+        "DeleteScheduledTask": ["ScheduledTaskId"]
     }
 }
 `
