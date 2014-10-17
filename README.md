@@ -38,8 +38,6 @@ Allow production:
         rds
         slb
         ess
-$ ./openapi ecs DescribeRegion
-Config your accessId and accessKey through 'openapi config --id=accessId --secret=accessKey' firstly.
 ```
 
 ### 使用：
