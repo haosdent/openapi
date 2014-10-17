@@ -269,13 +269,16 @@ func main() {
 		switch prod {
 		case "ecs":
 			endpoint = "ecs.aliyuncs.com"
-			version = "2013-01-10"
+			version = "2014-05-26"
 		case "slb":
 			endpoint = "slb.aliyuncs.com"
 			version = "2014-05-15"
 		case "rds":
 			endpoint = "rds.aliyuncs.com"
 			version = "2013-05-28"
+		case "ess":
+			endpoint = "ess.aliyuncs.com"
+			version = "2014-08-28"
 		case "config":
 			l := len(os.Args)
 			m := make(map[string]string)
