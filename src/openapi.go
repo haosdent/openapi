@@ -302,14 +302,6 @@ func main() {
 		case "ess":
 			endpoint = "ess.aliyuncs.com"
 			version = "2014-08-28"
-		case "config":
-			l := len(os.Args)
-			m := make(map[string]string)
-			for i := 2; i < l; i++ {
-				arr := strings.SplitN(os.Args[i], "=", 2)
-				m[arr[0]] = arr[1]
-			}
-			SaveAccessIdKey(m["--id"], m["--secret"])
 		case "help":
 			help(os.Args[2:])
 			return
@@ -323,7 +315,6 @@ func main() {
 			return
 		}
 
-		InitAccessIdKey()
 		action := os.Args[2]
 		params := map[string]string{
 			"Version": version,
@@ -332,10 +323,22 @@ func main() {
 
 		options := os.Args[3:]
 		for _, option := range options {
-			splits := strings.Split(option, "=")
+			splits := strings.SplitN(option, "=", 2)
 			k := splits[0]
 			v := splits[1]
-			params[k] = v
+			switch k {
+			case "AccessKey":
+				accessKey = v
+			case "AccessId":
+				accessId = v
+			default:
+				params[k] = v
+			}
+		}
+
+		if accessKey == "" || accessId == "" {
+			fmt.Println("AccessId and AccessKey are common params, please add them in command.")
+			os.Exit(-1)
 		}
 
 		UpdateParams(&params)
